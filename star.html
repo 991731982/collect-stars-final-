@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>ZIM -  - Code Creativity</title>
+        
+<script src="https://zimjs.org/cdn/nft/00/zim_physics.js"></script>
+        <script type="module">
+            // import zim from "https://zimjs.org/cdn/015/zim_game";
+            import zim from "https://zimjs.org/cdn/016/zim";
+
+            new Frame(FIT, 2177, 1080, interstellar, dark, ready);
+            
+            function ready() {
+
+           
+
+              
+              const sound = new Aud("assets/BgMusic2.mp3");
+              const musicPlay=new Pic('assets/musicPlay.png').reg(CENTER).pos(20,20,LEFT,TOP);
+              musicPlay.on("click", () => {
+
+      sound.play();});
+
+
+              // const bgMusic=new Aud("assets/bgMusic.mp3"); 
+              // bgMusic.play();
+              // //shader
+              
+
+                const physics = new Physics(0);
+                physics.drag();
+                // Given F, S, W, H or frame, stage, stageW, stageH
+                
+                function gameCover() {
+
+                    let gameTitle = new Pic("assets/title.png")
+            .pos(-600, 370, RIGHT, BOTTOM)
+            .animate({
+              props: { x: 980 },
+              time: .5,
+            });
+
+            
+            let boy = new Pic("assets/boy.png")
+            .pos(30, 80, LEFT, BOTTOM)
+            .animate({
+              props: { x: 500 },
+              time: .5,
+            });
+
+                        
+            let planet1 = new Pic("assets/planet1.png")
+            .pos(-320, 22, LEFT, TOP)
+            .animate({
+              props: { x: 320 },
+              time: .5,
+            });
+
+            let planet2 = new Pic("assets/planet2.png")
+            .pos(1050, -230, LEFT, TOP)
+            .animate({
+              props: { y: 230 },
+              time: .5,
+            });
+
+            let planet3 = new Pic("assets/planet3.png")
+            .pos(-300, 100, RIGHT, TOP)
+            .animate({
+              props: { x: 1390 },
+              time: .5,
+            });
+
+            let startButton = new Pic("assets/button.png")
+            .pos(-600, 35, RIGHT, BOTTOM)
+            .reg(CENTER)
+            .animate({
+              props: [
+                {props:{ x: 1450}},
+                {props:{ rotation: 30},wait:.3,time:.6, rewind:true,},
+            ],
+              time: .5,
+            });
+
+           
+
+
+            let star1 = new Pic("assets/star1.png")
+            .pos(127, 577, RIGHT, BOTTOM)
+            .alp(0)
+            .animate({
+              props: { alpha: 1 },
+              wait: .5,
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+
+            let star2 = new Pic("assets/star2.png")
+            .pos(193, 119, LEFT, TOP)
+            .alp(0)
+            .animate({
+              props: { alpha: 1 },
+              wait: .1,
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+            
+
+            let coverPic = new Pic("assets/bg.png").center().bot();
+
+
+                              //click start button
+          startButton.on("click", () => {
+
+            startButton.removeFrom();
+            startButton.off();
+            startButton.removeFrom();
+
+            boy.animate({
+              props: { x: -440 },
+              time: .5,
+            });
+            
+            planet1.animate({
+              props: { y: -1200 },
+              time: .5,
+            });
+
+            planet2
+            .animate({
+              props: { x: 2300 },
+              time: .5,
+            });
+            planet3.animate({
+              props: { y: -1200 },
+              time: .5,
+            });
+
+          
+
+
+            let rocket = new Pic("assets/rocket.png").loc(-200,700).alp(0)
+            .animate({
+                props:[
+                {props: {alpha: 1}, time:.5},
+              {props: { x:500, y:200,rotation:10}, time:1},
+              {props: { x:2300, y:-300,rotation:30}, time:2.3},
+            ],
+              wait: .4,
+            });
+
+            const emitter = new Emitter(new Circle(5, pink)).centerReg(rocket).pos(0, 0, LEFT, BOTTOM, rocket).mov(180,250);
+            
+            timeout(2, ()=>{
+            // new Aud("click.wav", 0.1).play();
+
+            //remove everything for next page
+
+            boy.removeFrom();
+            planet1.removeFrom();
+            planet2.removeFrom();
+            planet3.removeFrom();
+           
+            
+         
+            timeout(2, ()=>{
+            gameTitle.removeFrom();
+            coverPic.removeFrom();
+            rocket.removeFrom();
+            star1.removeFrom();
+            star2.removeFrom();
+            
+            page1();
+            S.update();
+       
+        });
+        });
+                 });
+                 
+                }
+
+                gameCover();
+
+                function page1() {
+
+
+                  const fragment = `    
+                
+
+                  #define BURST
+#define NUM_LAYERS 5.
+
+mat2 Rot(float a) {
+    float s=sin(a), c=cos(a);
+    return mat2(c,-s,s,c);
+}
+
+float Star(vec2 uv, float a, float sparkle) {
+    vec2 av1 = abs(uv);
+ 	vec2 av2 = abs(uv*Rot(a));
+    vec2 av = min(av1, av2);
+    
+    vec3 col = vec3(0);
+    float d = length(uv);
+    float star = av1.x*av1.y;
+    star = max(av1.x*av1.y, av2.x*av2.y);
+    star = max(0., 1.-star*1e3);
+    
+    float m = min(5., 1e-2/d);
+    
+    return m+pow(star, 4.)*sparkle;
+}
+
+float Hash21(vec2 p) {
+    p = fract(p*vec2(123.34,145.54));
+    p += dot(p, p+45.23);
+    return fract(p.x*p.y);
+}
+
+vec3 StarLayer(vec2 uv, float t, float sparkle) {
+    vec2 gv = fract(uv)-.5;
+    vec2 id = floor(uv);
+	vec3 col = vec3(0);
+    
+    #ifndef BURST
+    t = 0.;
+    #endif
+    
+    for(int y=-1; y<=1; y++) {
+        for(int x=-1; x<=1; x++) {
+            vec2 offs = vec2(x, y);
+            float n = Hash21(id-offs);
+			vec3 N = fract(n*vec3(10,100,1000));
+            vec2 p = (N.xy-.5)*.7;
+            
+            float brightness = Star(gv-p+offs, n*6.2831+t, sparkle);
+            vec3 star = brightness*vec3(.6+p.x, .4, .6+p.y)*N.z*N.z;
+            
+            
+            
+            star *= 1.+sin((t+n)*20.)*smoothstep(sin(t)*.5+.5, 1., fract(10.*n));
+            
+            float d = length(gv+offs);
+            
+            col += star*smoothstep(1.5, .8, d);
+        }
+    }
+    return col;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    vec2 uv = (fragCoord-.5*iResolution.xy)/iResolution.y;
+    vec2 M = iMouse.xy/iResolution.xy;
+    
+    M *= 10.;
+    
+	float t = -iTime*.3;
+	
+    float twirl = sin(t*.1);
+    twirl *= twirl*twirl*sin(dot(uv,uv));
+    uv *= Rot(-t*.2);
+    
+    uv *= 2.+sin(t*.05);
+    
+    vec3 col = vec3(0);
+    float speed = -.2;
+    #ifdef BURST
+    speed = .1;
+    float bla = sin(t+sin(t+sin(t)*.5))*.5+.5;
+    float d = dot(uv,uv);
+    
+    float a = atan(uv.x, uv.y);
+    uv /= d;
+    float burst = sin(iTime*.05);
+    uv *= burst+.2;
+    #endif
+    
+    float stp = 1./NUM_LAYERS;
+        
+    for(float i=0.; i<1.; i+=stp) {
+    	float lt = fract(t*speed+i);
+        float scale = mix(10., .25, lt);
+        float fade = smoothstep(0., .4, lt)*smoothstep(1., .95, lt); 
+        vec2 sv = uv*scale+i*134.53-M;
+        //sv.x += t;
+        col += StarLayer(sv, t, fade)*fade;
+    }
+    
+    #ifdef BURST
+    //t = iTime*.5;
+    float burstFade = smoothstep(0., .02, abs(burst));
+    float size = .9*sin(t)+1.;
+    size = max(size, sqrt(size));
+    float fade = size/d;
+    col *= mix(1., fade, burstFade);
+    col += fade*.2*vec3(1., .5, .1)*bla*burstFade;
+    
+    t*=1.5;
+    
+    a -= M.x*.1;
+    float rays = sin(a*5.+t*3.)-cos(a*7.-t);
+    rays *= sin(a+t+sin(a*4.)*10.)*.5+.5;
+    col += rays*bla*.1*burstFade;
+    col += 1.-burstFade;
+    #else
+    col *= 4.;
+    #endif
+    
+    fragColor = vec4(col,1.0);
+}  
+    `;   
+
+
+	
+   
+    const shader1=new zim.Shader(W, H, fragment).ble("screen").center();
+
+
+
+                    let bg2 = new Pic("assets/bg2.png").center().bot();
+
+                    let introduce=new Pic("assets/introduce.png").pos(0,560,CENTER,BOTTOM);
+
+                   
+
+            let Button2 = new Pic("assets/button2.png")
+            .pos(0, 310, CENTER, BOTTOM);
+
+            Button2.on("click", () => {
+                bg2.removeFrom();
+                shader1.removeFrom();
+                introduce.removeFrom();
+                Button2.removeFrom();
+                Button2.off();
+                Button2.removeFrom();
+            page2();
+            S.update();
+            });
+                   
+    };
+
+
+                function page2() {
+
+
+                    
+
+
+                    // const bounce = new Aud("bounce.mp3");
+                    let bg3 = new Pic("assets/bg.png").center().bot();
+                    const starFiles = ["assets/S1.png", "assets/S2.png", "assets/S3.png", "assets/S4.png"];
+                    const scoreLabel = new Pic("assets/collect.png").pos(0,30,CENTER,TOP);
+
+
+        const coins = new Container(W, H).addTo();
+
+        const size = 103;
+
+        interval({min:.1, max:.5}, ()=>{
+            
+            // uses ZIM VEE value to get random from coins array
+            new Pic(starFiles)
+                .loc(rand(W-size), -size, coins) // put in container
+
+                .animate({y:H}, 2, "linear", coin => {
+                    coin.dispose(); // or if needed again, coin.removeFrom()
+                });
+
+
+        }, null, true) 
+
+        const head = new Pic("assets/boy.png")
+            .reg(CENTER)
+            .sca(.8)
+            .pos(0,50,CENTER,BOTTOM)
+           
+
+
+        new MotionController(head, "keydown", 10, HORIZONTAL, S);
+
+        
+        const scorer = new Scorer().pos(1900, 100);
+
+        const timer = new Timer().pos(100, 100);
+
+      
+
+
+        // let score = 0;
+
+        Ticker.add(()=>{
+            coins.loop(coin => {
+                if (head.hitTestBounds(coin)) {
+                    coin.dispose();
+                    scorer.score += 1;
+                    // score += 1000;
+                    // scoreLabel.text = score;
+                }   
+            }, true); // loop backwards when removing
+        })
+        timeout(60, ()=>{
+          scorer.off();
+          scorer.removeFrom();
+          timer.off();
+          timer.removeFrom();
+ 
+
+
+        let continueButton = new Pic("assets/continue.png").sca(.8).reg(CENTER)
+            .pos(100, 100, RIGHT, BOTTOM);
+
+            continueButton.on("click", () => {
+              
+                coins.removeFrom();
+                bg3.removeFrom();
+                head.removeFrom();
+                scorer.removeFrom();
+                scoreLabel.removeFrom();
+                timer.removeFrom();
+                scoreLabel.removeFrom();
+                continueButton.removeFrom();
+                continueButton.off();
+                continueButton.removeFrom();
+            S.update();
+            page4();
+                 });
+                });
+                }
+
+                
+                
+            
+              
+
+function page4() {
+
+    const bg4= new Pic("assets/bg3.png").center().bot();
+
+                let S1 = new Pic("assets/S4.png").pos(1100,160,RIGHT,TOP).sca(2.5)
+                .animate({
+              props: { x: 2620,y:-320,rotation:-90 },
+              time: 2.5,
+              wait:.5
+            });
+                let S6 = new Pic("assets/S3.png").pos(1400,210,RIGHT,TOP).sca(2)
+                .animate({
+              props: { x: 2620,y:220 ,rotation:180},
+              time: 2.5,
+              wait:.5
+            });
+
+                let S7 = new Pic("assets/S2.png").pos(1400,220,RIGHT,TOP).sca(1.2).rot(50)
+                .animate({
+              props: { x: 2720,y:420,rotation:180 },
+              time: 2.5,
+              wait:.5
+            });
+
+                let S2 = new Pic("assets/S1.png").pos(1200,280,RIGHT,TOP).sca(2)
+                .animate({
+              props: { x: 2920,y:200,rotation:-180 },
+              time: 2.5,
+              wait:.5
+            });
+
+                let S3 = new Pic("assets/S2.png").pos(1400,260,RIGHT,TOP).sca(1.6)
+                .animate({
+              props: { x: 2620,y:100 ,rotation:90},
+              time: 2.5,
+              wait:.5
+            });
+                let S4 = new Pic("assets/S3.png").pos(1250,190,RIGHT,TOP).sca(1.2)
+                .animate({
+              props: { x: 2620,y:200 ,rotation:-120},
+              time: 2.5,
+              wait:.5
+            });
+                let S5 = new Pic("assets/S4.png").pos(1500,200,RIGHT,TOP).sca(1.2)
+                .animate({
+              props: { x: 2820,y:500 ,rotation:120},
+              time: 2.5,
+              wait:.5
+            });
+                let S8 = new Pic("assets/S1.png").pos(1000,270,RIGHT,TOP).sca(1.6).reg(CENTER).rot(-50)
+                .animate({
+              props: { x: 2920,y:200,rotation:-180 },
+              time: 2.5,
+              wait:.5
+            });
+
+            let describe = new Pic("assets/title3.png").pos(95,320,RIGHT,BOTTOM);
+
+            timeout(2.2, ()=>{
+    let Button3 = new Pic("assets/continue.png").sca(.8).reg(CENTER)
+    .pos(200,70,RIGHT,BOTTOM);
+
+            Button3.on("click", () => {
+                bg4.removeFrom();
+                describe.removeFrom();
+                Button3.removeFrom();
+                Button3.off();
+                Button3.removeFrom();
+            page5();
+            S.update();
+            });
+          });
+
+}
+
+
+
+let poetries;
+
+
+
+function page5() {
+
+  
+ 
+
+    const bgGrow= new Pic("assets/bg4.png").center().bot();
+
+const music3=new Pic("assets/star.png").center().rot(10).pos(-45,-200).alp(.23).sca(1.3)
+.animate({
+props:{alpha:0, scale:0,rotation:10},
+ease:"ballisticIn",
+//   rewind:"true",
+time:.7,
+from:true
+});
+music3.wiggle("x",music3.x,50,20,1,3);
+music3.wiggle("y",music3.y,0,30,1,3);
+
+
+
+
+
+
+
+//5.title
+let title = new Pic("assets/plant.png")
+.centerReg().mov(0,-425);
+
+
+
+
+poetries = new Container(W,H)
+.centerReg()
+.drag()
+.sca(0)
+.animate({
+props:{scale:1}, 
+time:.7, 
+ease:zimEase([0,0.122,0.797,1]),
+// call:page6
+});
+
+
+
+
+            new Pic("assets/S1.png").reg(CENTER).pos(340,140,LEFT,TOP,poetries)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              wait: .5,
+              time:1,
+              rewind:true,
+              loop: true,
+            }).top();
+
+new Pic("assets/S3.png").reg(CENTER).pos(440,240,LEFT,TOP,poetries)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              time:1,
+              rewind:true,
+              loop: true,
+            }).top();
+
+new Pic("assets/S1.png").pos(500,520,LEFT,TOP,poetries).reg(CENTER).rot(-50)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              wait: .5,
+              time:1,
+              rewind:true,
+              loop: true,
+            }).top();
+new Pic("assets/S4.png").pos(600,620,LEFT,TOP,poetries).reg(CENTER).rot(-20)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              time:1,
+              rewind:true,
+              loop: true,
+            }).top();
+new Pic("assets/S3.png").pos(650,700,LEFT,TOP,poetries).reg(CENTER).rot(-50)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              wait: .5,
+              time:1,
+              rewind:true,
+              loop: true,
+            }).top();
+
+new Pic("assets/S2.png").pos(670,530,LEFT,TOP,poetries).reg(CENTER)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              time:1,
+              wait:.8,
+              rewind:true,
+              loop: true,
+            }).top();
+
+new Pic("assets/S4.png").pos(700,300,LEFT,TOP,poetries).reg(CENTER).rot(20)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              time:1,
+              rewind:true,
+              loop: true,
+            }).top();
+new Pic("assets/S2.png").pos(770,400,LEFT,TOP,poetries).reg(CENTER).rot(20)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              wait: .5,
+              time:1,
+              rewind:true,
+              loop: true,
+            }).top();
+new Pic("assets/S3.png").pos(800,600,LEFT,TOP,poetries).reg(CENTER)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              time:1,
+              wait:.8,
+              rewind:true,
+              loop: true,
+            }).top();
+
+
+
+
+
+poetries.loop(sentences=>{
+sentences.startX = sentences.x;
+sentences.startY = sentences.y;
+
+});   
+
+
+
+
+
+
+
+let card;
+let front;
+let back;
+
+
+
+front = new Tile(new Circle(60,white).reg(CENTER), 4, 2, 100, 170).alp(.5).pos(500,600);
+
+// 7. Create a back that is a Container with a Rectangle 350x350 with rounded corners
+// and a Poly() with radius 150, 5 sided star - center it and move it down 8 pixels 
+// then center a Label() that says "PASS".
+// Note that back is declared above.
+back = new Container();
+
+new Pic("assets/boy.png").addTo(back).mov(-100,-100).sca(1.05)
+
+
+// 9. Make a Flipper() of the front and back centerReg 
+// Store the flipper in the variable called card (already declared above)
+// We want the flipper to not recieve any mouse events to start.
+// Make the flipper be under the circles and animate in as shown with a backOut ease.
+// The animation should wait .3 seconds and call part4 when done.
+card = new Flipper(front,back)
+.noMouse()
+.centerReg()
+.ord(-1)
+.sca(0)
+.alp(0)
+.animate({
+props:{alpha:1,scale:1},
+wait:.3,
+time:1,
+ease:"linear",
+// call:page7
+}).top().pos(1300,600);      
+
+
+
+    
+
+// 10. When we mousedown on the circles set the shadow as shown.        
+poetries.on("mousedown", e => {
+e.target.sha(black.toAlpha(.5),5,5,0);     
+S.update();       
+// const sound = new Audio("assets/backing.mp3");
+//         sound.play();
+
+
+});
+
+// 11. When we pressup on the circle do all the following:        
+poetries.on("pressup", e => {
+
+// HINT: Remember your e.target... would suggest storing this as const circle.            
+const sentences = e.target;
+
+// A. remove the shadow from the selected circle.
+// From now on, we refer to the selected circle just as circle.
+sentences.sha(-1); 
+
+// B. make the circle have no mouse events
+sentences.noMouse();
+
+// C. ZIM loop() through the front and each time get the rect 
+// Assign the loop() to a variable called answer
+const answer = front.loop(rect=>{
+
+// D. In the loop test to see if the circle is hitting the registration of the rect 
+// and the rect is not full (see Part F. below)                
+if (sentences.hitTestReg(rect) && !rect.full) {
+
+// E. If this is the case then locate the circle at the rect and INSIDE the rect 
+// (so the circle will no longer be in circles but rather in the rect)                    
+sentences.loc(rect,null,rect).alp(2);
+
+// F. And set a full property of the rect to true.
+// This is a made up property - so you will not find it in the docs.
+rect.full = true;
+
+// G. Update the stage and return "placed"; 
+// This will exit the loop and put the word "placed" into answer (of Part C. above).
+S.update();
+return "placed";
+}                
+});
+
+// H. Outside the loop but still inside the pressup event 
+// if the answer is not "placed" (remember your !=)
+// then animate the circle back to its startX and startY 
+// and when done the animation 
+// set the mouse events back on circle (important!)
+if (answer!="placed") {                
+sentences.animate({
+props:{x:sentences.startX, y:sentences.startY},
+time:.2,
+call:()=>{sentences.mouse();}
+});
+}      
+
+// I. If the numChildren of the circles container is 0 
+// we are done so do the following steps: 
+
+const pic =new Pic("assets/star1.png").loc(910,905).tap(()=>{
+zog("clicking");
+// J. Add a timeout of 1 second to call an arrow function
+
+
+
+});
+
+
+
+});    
+timeout(12, ()=>{     
+const button3=new Pic("assets/continue.png").sca(.8).reg(CENTER).pos(200,70,RIGHT,BOTTOM);
+
+button3.on("click", () => {
+              
+
+              button3.removeFrom();
+              button3.off();
+              button3.removeFrom();
+              S.update();
+          page6();
+          
+});
+});
+} 
+
+function page6(){
+
+//     let bg3 = new Pic("assets/bgLong.png")
+// .pos(0,0,CENTER,BOTTOM)
+// .animate({
+//               props: { y:0 },
+//               wait:1,
+//               time: 1.5,
+              
+//             })
+//             ;
+let bg3 = new Pic("assets/bg.png").centerReg();
+          
+let StarOnTheGround1 = new Pic("assets/S1.png").reg(CENTER).pos(400,100,LEFT,BOTTOM)
+.alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+
+          let StarOnTheGround2 = new Pic("assets/S2.png").reg(CENTER).pos(550,150,LEFT,BOTTOM)
+          .alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+          let StarOnTheGround3 = new Pic("assets/S3.png").reg(CENTER).pos(750,30,LEFT,BOTTOM)
+          .alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              wait:.5,
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+          let StarOnTheGround4 = new Pic("assets/S4.png").reg(CENTER).pos(950,70,LEFT,BOTTOM)
+          .alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+          let StarOnTheGround5 = new Pic("assets/S1.png").reg(CENTER).pos(1150,10,LEFT,BOTTOM).rot(-40)
+          .alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              wait:.5,
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+          let StarOnTheGround6 = new Pic("assets/S2.png").reg(CENTER).pos(1450,60,LEFT,BOTTOM).rot(-40)
+          .alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              wait:.5,
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+          let StarOnTheGround7 = new Pic("assets/S3.png").reg(CENTER).pos(1750,200,LEFT,BOTTOM).rot(40)
+          .alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+          let StarOnTheGround8 = new Pic("assets/S3.png").reg(CENTER).pos(1050,140,LEFT,BOTTOM).rot(30)
+          .alp(.5)
+            .animate({
+              props: { alpha: 1 },
+              wait:.5,
+              time:1,
+              rewind:true,
+              loop: true,
+            });
+
+
+
+            const button4=new Pic("assets/harvest.png").centerReg().mov(0,-30);
+
+            button4.on("click", () => {
+
+              button4.removeFrom();
+                button4.off();
+                button4.removeFrom();
+              
+              StarOnTheGround1.alp(.5)
+              .animate({
+              props:{scale:0},
+              time:.5,
+              loop:false
+              });
+              StarOnTheGround2.alp(.5)
+              .animate({
+              props:{scale:0},
+              time:.5,
+              loop:false
+              });
+              StarOnTheGround3.alp(.5)
+              .animate({
+              props:{scale:0},
+              time:.5,
+              loop:false
+              });
+              StarOnTheGround4.alp(.5)
+              .animate({
+              props:{scale:0},
+              time:.5,
+              loop:false
+              });
+              StarOnTheGround5.alp(.5)
+              .animate({
+              props:{scale:0},
+              time:.5,
+              loop:false
+              });
+              StarOnTheGround6.alp(.5)
+              .animate({
+              props:{scale:0},
+              time:.5,
+              loop:false
+              });
+              StarOnTheGround7.alp(.5)
+              .animate({
+              props:{scale:0},
+              time:.5,
+              loop:false
+              });
+              StarOnTheGround8.alp(.5)
+              .animate({
+              props:{scale:0},
+              time:.5,
+              loop:false
+              });
+
+          let PlanetOnTheGround1 = new Pic("assets/planetS4.png").reg(CENTER).pos(400,100,LEFT,BOTTOM).rot(30);
+          let PlanetOnTheGround8 = new Pic("assets/planetS1.png").reg(CENTER).pos(1050,140,LEFT,BOTTOM);
+          let PlanetOnTheGround2 = new Pic("assets/planetS2.png").reg(CENTER).pos(550,150,LEFT,BOTTOM);
+          let PlanetOnTheGround3 = new Pic("assets/planetS3.png").reg(CENTER).pos(750,30,LEFT,BOTTOM);
+          let PlanetOnTheGround4 = new Pic("assets/planetS4.png").reg(CENTER).pos(950,70,LEFT,BOTTOM);
+          let PlanetOnTheGround5 = new Pic("assets/planetS5.png").reg(CENTER).pos(1200,20,LEFT,BOTTOM);
+          let PlanetOnTheGround6 = new Pic("assets/planetS2.png").reg(CENTER).pos(1450,60,LEFT,BOTTOM).rot(30);
+          let PlanetOnTheGround7 = new Pic("assets/planetS4.png").reg(CENTER).pos(1750,200,LEFT,BOTTOM);
+
+             
+
+          PlanetOnTheGround1.animate({props: { y:130 },wait:1,time:1,});
+          PlanetOnTheGround2.animate({props: { y:430 },wait:1,time:1,});
+          PlanetOnTheGround3.animate({props: { y:300 },wait:1,time:1,});
+          PlanetOnTheGround4.animate({props: { y:450 },wait:1,time:1,});
+          PlanetOnTheGround5.animate({props: { y:130 },wait:1,time:1,});
+          PlanetOnTheGround6.animate({props: { y:400 },wait:1,time:1,});
+          PlanetOnTheGround7.animate({props: { y:200 },wait:1,time:1,});
+          PlanetOnTheGround8.animate({props: { y:230 },wait:1,time:1,});
+           
+
+              timeout(3, ()=>{
+                bg3.removeFrom();
+                StarOnTheGround1.removeFrom();
+                StarOnTheGround2.removeFrom();
+                StarOnTheGround3.removeFrom();
+                StarOnTheGround4.removeFrom();
+                StarOnTheGround5.removeFrom();
+                StarOnTheGround6.removeFrom();
+                StarOnTheGround7.removeFrom();
+                StarOnTheGround8.removeFrom();
+                PlanetOnTheGround1.removeFrom();
+                PlanetOnTheGround2.removeFrom();
+                PlanetOnTheGround3.removeFrom();
+                PlanetOnTheGround4.removeFrom();
+                PlanetOnTheGround5.removeFrom();
+                PlanetOnTheGround6.removeFrom();
+                PlanetOnTheGround7.removeFrom();
+                PlanetOnTheGround8.removeFrom();
+
+                S.update();
+page7();
+});
+            });
+}
+
+function page7(){
+
+  
+
+  const fragment = `    
+
+    /*originals https://www.shadertoy.com/view/lslyRn https://www.shadertoy.com/view/dssGDM https://www.shadertoy.com/view/4tyfWy*/
+#define iterations 11
+#define formuparam 0.73
+
+#define volsteps 20
+#define stepsize 0.1
+
+#define zoom   0.800
+#define tile   0.850
+#define speed  0.000 
+
+#define brightness 0.0015
+#define darkmatter 0.300
+#define distfading 0.730
+#define saturation 0.850
+
+float nice_star(vec2 uv, float anim)
+{
+    uv = abs(uv);
+    vec2 pos = min(uv.xy/uv.yx, anim);
+    float p = (2.0 - pos.x - pos.y);
+    return (2.0+p*(p*p-1.5)) / (uv.x+uv.y);      
+}
+void mainVR( out vec4 fragColor, in vec2 fragCoord, in vec3 ro, in vec3 rd )
+{
+	//get coords and direction
+	vec3 dir=rd;
+	vec3 from=ro;
+	
+	//volumetric rendering
+	float s=0.1,fade=1.;
+	vec3 v=vec3(0.);
+	for (int r=0; r<volsteps; r++) {
+		vec3 p=from+s*dir*.5;
+		p = abs(vec3(tile)-mod(p,vec3(tile*2.))); // tiling fold
+		float pa,a=pa=0.;
+		for (int i=0; i<iterations; i++) { 
+			p=abs(p)/dot(p,p)-formuparam; // the magic formula
+			a+=abs(length(p)-pa); // absolute sum of average change
+			pa=length(p);
+		}
+		float dm=max(0.,darkmatter-a*a*.001); //dark matter
+		a*=a*a; // add contrast
+		if (r>6) fade*=1.2-dm; // dark matter, don't render near
+		//v+=vec3(dm,dm*.5,0.);
+		v+=fade;
+		v+=vec3(s,s*s,s*s*s*s)*a*brightness*fade; // coloring based on distance
+		fade*=distfading; // distance fading
+		s+=stepsize;
+	}
+	v=mix(vec3(length(v)),v,saturation); //color adjust
+	fragColor = vec4(v*.03,1.);	
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+	//get coords and direction
+	vec2 uv=fragCoord.xy/iResolution.xy-.5;
+	uv.y*=iResolution.y/iResolution.x;
+	vec3 dir=vec3(uv*zoom,1.);
+	float time=iTime*speed+.25;
+ vec2 m = (iMouse.xy - .5*iResolution.xy)/iResolution.y;
+	float anim = sin(iTime * 1.0) * 0.1 + 1.0; 
+   
+    vec2 a = vec2(0.);
+    vec2 b = m;
+     vec3 col=nice_star(uv-b,anim) * vec3(0.55,0.5,0.515)*0.005;
+
+	vec3 from=vec3(1.,.5,0.5)+col;
+	from+=vec3(time*2.,time,-2.);
+	
+
+	mainVR(fragColor, fragCoord, from, dir);	
+    fragColor+=vec4(nice_star(uv-b,anim) * vec3(0.55,0.5,0.515)*0.04,1.);
+    
+}
+       
+    `;   
+
+
+	
+   
+    new zim.Shader(W, H, fragment).center();
+
+
+
+	const holder = new Container(W,H).addTo();
+	const shaderToy = new Pic("assets/bg5.png").alp(0).center();
+	function go() {zgo("https://www.shadertoy.com/view/lss3zj", "_blank");}
+
+	F.on("resize", ()=>{
+		holder.setBounds(0,0,F.visibleRight-F.visibleLeft, F.visibleBottom-F.visibleTop).center();
+		shaderToy.center();
+	})
+
+   
+// let bg3 = new Pic("assets/bg5.png").centerReg();
+
+            const planets = ["assets/planet1.png","assets/planet2.png","assets/planet3.png"];
+
+            new Pic("assets/final.png").reg(CENTER).pos(0,30,CENTER,TOP);
+
+
+
+        const pumpkins = new Container(W, H).addTo();
+        loop(2, ()=>{
+            new Pic("assets/planet1.png")
+            .pos(150, 40, LEFT, TOP,pumpkins).addPhysics({linear:100, angular:.02,bounciness:.1,linear:10,friction:4});
+            // .animate({
+            //   props: { x: W - 690 },
+            //   time: 1.5,
+            // });
+          
+
+            new Pic("assets/planet2.png")
+            .pos(150, 40, LEFT, TOP,pumpkins).addPhysics({linear:100, angular:.02,bounciness:.1,linear:10,friction:4});
+            // .animate({
+            //   props: { x: W - 690 },
+            //   time: 1.5,
+            // });
+
+            new Pic("assets/planet3.png")
+            .pos(150, 40, LEFT, TOP,pumpkins).addPhysics({linear:100, angular:.02,bounciness:.1,linear:10,friction:4});
+            // .animate({
+            //   props: { x: W - 690 },
+            //   time: 1.5,
+            // });
+
+            
+        })
+        // const candle = new Pic("assets/boy.png")
+        //     .pos(250, 400, RIGHT, BOTTOM)
+        //     .drag().addPhysics();
+
+            
+
+        // candle.on("pressmove", ()=>{
+
+        //     pumpkins.loop(pumpkin =>{
+        //         if (pumpkin.hitTestCircleRect(candle)) {
+                
+        //         }
+        //     });
+            
+        // })
+
+
+        const points = [[-16.2,119.8,0,0,-159.8,45.9,159.8,-45.9],[123.9,-64.7,0,0,11.9,35.4,-11.9,-35.4],[21.9,-78.9,0,0,26.2,-47.1,-26.2,47.1],[90.4,18.1,0,0,-50.6,-3.4,50.6,3.4],[248.2,0.7,0,0,-41.9,-15.7,41.9,15.7],[277.5,106.7,0,0,20.3,-37.6,-20.3,37.6],[180.4,67.8,0,0,1.5,65.1,-1.5,-65.1],[324.6,-83.2,0,0,-57.4,2.1,114.8,-4.3]];
+	const path = new Squiggle({
+		points:points,
+		interactive:false, // remove or set to true to allow user to change with path
+		thickness:3,		
+		color:'#41d6e0'
+	})
+		.transformPoints("scale", 1.8)
+		.centerReg()
+    .alp(.4)
+    .sca(2);
+	
+	// emojis are different in different browsers 
+	// on the PC we want to rotate the emoji 45 degrees to be straight on the path 
+	// animate the container but rotate the object in the container
+	let label;
+	const plane = new Container()
+		.addTo()
+		.animate({
+			time:4,
+			props:{path:path},
+			startPaused:false, // remove or set to true to not animate but only drag		
+			drag:true, // optional
+			call:()=>{
+				label = new Pic("assets/drag.png").reg(CENTER).pos(0, 30, CENTER, BOTTOM);
+			}
+		});	
+
+            //     new Pic("assets/boy.png")
+            //     .centerReg(plane)
+            // .drag().addPhysics();
+	new Pic("assets/rocket.png")
+		.centerReg(plane)
+		.rot(45);
+	
+	// remove instructions if press on plane
+	plane.on("mousedown", e=>{
+		if (label) {
+			label.removeFrom();
+			e.remove(); // remove event
+		}
+	});
+	
+	frame.madeWith().pos(40,40,RIGHT,BOTTOM);
+	
+	  
+    stage.update(); // needed to view changes
+        
+
+        
+
+
+}
+
+            
+        }
+        </script>
+        <meta name="viewport" content="width=device-width, user-scalable=no" />
+    </head>
+    <body></body>
+</html>
